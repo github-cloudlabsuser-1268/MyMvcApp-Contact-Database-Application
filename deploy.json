@@ -1,0 +1,63 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+      {
+        "type": "Microsoft.Web/serverfarms",
+        "apiVersion": "2021-02-01",
+        "name": "myAppServicePlan",
+        "location": "[resourceGroup().location]",
+        "sku": {
+          "name": "F1",
+          "tier": "Free"
+        },
+        "properties": {
+          "reserved": true
+        }
+      },
+      {
+        "type": "Microsoft.Web/sites",
+        "apiVersion": "2021-02-01",
+        "name": "myMvcApp",
+        "location": "[resourceGroup().location]",
+        "dependsOn": [
+          "[resourceId('Microsoft.Web/serverfarms', 'myAppServicePlan')]"
+        ],
+        "properties": {
+          "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'myAppServicePlan')]"
+        }
+      },
+      {
+        "type": "Microsoft.Sql/servers",
+        "apiVersion": "2021-02-01",
+        "name": "mySqlServer",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "administratorLogin": "sqladmin",
+          "administratorLoginPassword": "P@ssw0rd123"
+        },
+        "resources": [
+          {
+            "type": "databases",
+            "apiVersion": "2021-02-01",
+            "name": "myDatabase",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+              "[resourceId('Microsoft.Sql/servers', 'mySqlServer')]"
+            ],
+            "properties": {
+              "collation": "SQL_Latin1_General_CP1_CI_AS",
+              "maxSizeBytes": "2147483648",
+              "sampleName": "AdventureWorksLT"
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "webAppUrl": {
+        "type": "string",
+        "value": "[reference('myMvcApp').defaultHostName]"
+      }
+    }
+  }
